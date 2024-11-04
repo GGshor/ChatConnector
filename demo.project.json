@@ -1,0 +1,16 @@
+{
+  "name": "ChatServiceV2 Demo",
+  "tree": {
+    "$className": "DataModel",
+
+    "ServerStorage": {
+      "ChatServiceV2": {
+        "$path": "./src"
+      }
+    },
+
+    "ServerScriptService": {
+      "$path": "./demo/server"
+    }
+  }
+}

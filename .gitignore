@@ -1,0 +1,12 @@
+# Project place file
+/ChatServiceV2.rbxlx
+
+# Roblox Studio lock files
+/*.rbxlx.lock
+/*.rbxl.lock
+
+# Rojo sourcemap file
+/sourcemap.json
+
+# Selene Roblox library file
+/roblox.yml
