@@ -1,16 +1,22 @@
 {
-  "name": "ChatServiceV2 Demo",
+  "name": "ChatConnector Demo",
   "tree": {
     "$className": "DataModel",
 
-    "ServerStorage": {
-      "ChatServiceV2": {
+    "ReplicatedStorage": {
+      "ChatConnector": {
         "$path": "./src"
       }
     },
 
     "ServerScriptService": {
-      "$path": "./demo/server"
+      "$path": "./demo/Server"
+    },
+
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$path": "./demo/Client"
+      }
     }
   }
 }

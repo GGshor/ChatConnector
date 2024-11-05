@@ -1,14 +1,6 @@
 {
-    "name": "ChatChannelService",
+    "name": "ChatConnector",
     "tree": {
-        "$path": "./src",
-  
-        "Modules": {
-          "$className": "Folder",
-          
-          "Icon": {
-            "$path": "./modules/TopbarPlus/withoutLink.project.json"
-          }
-        }
+        "$path": "./src"
     }
-  }
+}
