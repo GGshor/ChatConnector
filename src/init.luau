@@ -7,8 +7,11 @@ local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
 
 local Types = require(script:WaitForChild("Types"))
+local ChatChannel = require(script:WaitForChild("ChatChannel"))
 
-local ChatConnector = {} :: Types.ChatConnectorAPI
+local ChatConnector = {
+    ChatChannels = {}
+} :: Types.ChatConnectorAPI
 
 local ClientEvent = script:WaitForChild("ClientEvent")
 
@@ -19,7 +22,7 @@ local ClientEvent = script:WaitForChild("ClientEvent")
 
     @return string -- The made string
 ]=]
-local function Color3ToRGBString(color: Color3): (number, number, number)
+local function Color3ToRGBString(color: Color3): string
     return `{math.floor(color.R * 255 + 0.5)}, {math.floor(color.G * 255 + 0.5)}, {math.floor(color.B * 255 + 0.5)}`
 end
 
@@ -53,6 +56,33 @@ function ChatConnector:Chat(partOrCharacter: Instance , message: string, color: 
     else
         ClientEvent:FireAllClients("Chat", partOrCharacter, message, color)
     end
+end
+
+
+--[=[
+    Creates a new TextChannel if it doesn't exist already.
+
+    @param channelName string -- The channel name
+    @param autoJoin boolean -- Automatically add users to channel, by default true
+
+    @return Types.ChatChannel
+]=]
+function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Types.ChatChannel
+    -- Prevent Clients from running this method
+    if RunService:IsClient() then
+        return
+    end
+
+    -- Check if channel is already registered
+    if self.ChatChannels[channelName] then
+        return self.ChatChannels[channelName]
+    end
+
+    -- Create the channel and save it
+    local newChannel = ChatChannel.new(channelName, autoJoin)
+    self.ChatChannels[channelName] = newChannel
+
+    return newChannel
 end
 
 --[=[

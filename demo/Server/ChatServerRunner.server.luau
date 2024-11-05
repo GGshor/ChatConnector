@@ -4,6 +4,10 @@ local Workspace = game:GetService("Workspace")
 local ChatConnector = require(ReplicatedStorage:WaitForChild("ChatConnector"))
 local TestPart = Workspace:WaitForChild("SpawnLocation")
 
+task.delay(5, function()
+    local TestChannel = ChatConnector:AddChannel("TestChannel")
+end)
+
 while true do
     ChatConnector:Chat(TestPart, "Colors 🥳", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
 
