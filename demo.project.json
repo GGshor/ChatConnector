@@ -17,6 +17,12 @@
       "StarterPlayerScripts": {
         "$path": "./demo/Client"
       }
+    },
+
+    "ServerStorage": {
+      "Old Chat Client": {
+        "$path": "Old_Chat_Client.rbxm"
+      }
     }
   }
 }
