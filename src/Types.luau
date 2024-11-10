@@ -29,9 +29,11 @@ export type ChatConnectorAPI = {
     Speakers: {[string]: ChatSpeaker},
 
     Chat: (self: ChatConnectorAPI, partOrCharacter: Instance , message: string, color: Color3?) -> (),
+    SendSystemMessage: (self: ChatConnectorAPI, message: string, textChannel: ChatChannel, metadata: string?) -> (),
     AddChannel: (self: ChatConnectorAPI, channelName: string, autoJoin: boolean?) -> ChatChannel,
     GetChannel: (self: ChatConnectorAPI, channelName: string) -> ChatChannel?,
-    AddSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker
+    AddSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker,
+    GetSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker
 }
 
 export type ChatSettings = {
