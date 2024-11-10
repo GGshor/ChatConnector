@@ -29,3 +29,13 @@ Creates a new `TextChannel` if it doesn't exist already.
 ```lua
 local newChannel = ChatConnector:AddChannel("SecretTeam")
 ```
+
+### `ChatConnector:GetChannel(channelName)`
+Returns a TextChannel if it exists.
+
+- **`channelName`** (string): The name of the channel to add.
+
+#### Example:
+```lua
+local foundChannel = ChatConnector:GetChannel("SecretTeam")
+```

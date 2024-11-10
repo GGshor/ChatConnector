@@ -75,15 +75,31 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
     end
 
     -- Check if channel is already registered
-    if self.ChatChannels[channelName] then
+    if self.ChatChannels[channelName:lower()] then
         return self.ChatChannels[channelName]
     end
 
     -- Create the channel and save it
     local newChannel = ChatChannel.new(channelName, autoJoin)
-    self.ChatChannels[channelName] = newChannel
+    self.ChatChannels[channelName:lower()] = newChannel
 
     return newChannel
+end
+
+--[=[
+    Returns a TextChannel if it exists.
+
+    @param channelName string -- The channel name
+
+    @return Types.ChatChannel?
+]=]
+function ChatConnector:GetChannel(channelName: string): Types.ChatChannel?
+    -- "All" is the old general channel name
+    if channelName:lower() == "all" then
+        channelName = "General"
+    end
+
+    return self.ChatChannels[channelName:lower()]
 end
 
 -- Sets up the client events
