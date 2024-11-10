@@ -7,14 +7,14 @@ local TestPart = Workspace:WaitForChild("SpawnLocation")
 
 task.delay(2, function()
     local TestChannel = ChatConnector:AddChannel("TestChannel", false)
+    local TestSpeaker = ChatConnector:AddSpeaker("Testing")
 
-    local speaker = ChatConnector:GetSpeaker(Players:GetPlayers()[1].Name)
-    speaker:AddChannel("TestChannel")
+    TestSpeaker:JoinChannel("All")
 
-    speaker:SetExtraData("NameColor", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
-    speaker:SetExtraData("ChatColor", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
-    
-    speaker:SetExtraData("Tags", {
+    TestSpeaker:SetExtraData("NameColor", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
+    TestSpeaker:SetExtraData("ChatColor", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
+
+    TestSpeaker:SetExtraData("Tags", {
         {
             TagColor = Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)),
             TagText = "TestTag1",
@@ -24,6 +24,11 @@ task.delay(2, function()
             TagText = "TestTag2",
         }
     })
+
+    while true do
+        TestSpeaker:SayMessage("Hi!", "All")
+        task.wait(math.random(1, 5))
+    end
 end)
 
 while true do

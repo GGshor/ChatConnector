@@ -9,8 +9,9 @@ export type ChatSpeaker = {
     ExtraData: {[string]: any},
     ActiveChannels: {},
 
-    AddChannel: (channelName: string) -> (),
-    SetExtraData: (dataName: string, dataValue: any) -> ()
+    JoinChannel: (channelName: string) -> (),
+    SetExtraData: (dataName: string, dataValue: any) -> (),
+    SayMessage: (message: string, channelName: string) -> ()
 }
 
 export type ChatChannel = {
@@ -20,7 +21,7 @@ export type ChatChannel = {
     Joinable: boolean, -- Deprecated, but maybe used in Future?
     Private: boolean, -- Deprecated, but good feature for ChatChannelService?
 
-    AddUserAsync: (userid: number) -> ()
+    AddUserAsync: (userid: number) -> (),
 }
 
 export type ChatConnectorAPI = {

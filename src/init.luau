@@ -71,11 +71,11 @@ end
 
     @return nil
 ]=]
-function ChatConnector:SendSystemMessage(message: string, textChannel: Types.ChatChannel)
+function ChatConnector:SendSystemMessage(message: string, textChannel: Types.ChatChannel, metadata: string?)
     if RunService:IsClient() then
-        textChannel._textChannel:DisplaySystemMessage(message)
+        textChannel._textChannel:DisplaySystemMessage(message, metadata)
     else
-        ClientEvent:FireAllClients("SendSystemMessage", message, textChannel)
+        ClientEvent:FireAllClients("SendSystemMessage", message, textChannel, metadata)
     end
 end
 
@@ -91,6 +91,11 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
     -- Prevent Clients from running this method
     if RunService:IsClient() then
         return
+    end
+
+    -- All is the old name
+    if channelName:lower() == "all" then
+        channelName = "General"
     end
 
     -- Check if channel is already registered
@@ -130,7 +135,7 @@ function ChatConnector:GetChannel(channelName: string): Types.ChatChannel?
         channelName = "General"
     end
 
-    return self.ChatChannels[channelName:lower()]
+    return self.ChatChannels[channelName:lower()] or self:AddChannel(channelName)
 end
 
 --[=[
@@ -155,7 +160,7 @@ function ChatConnector:AddSpeaker(speakerName: string): Types.ChatSpeaker
     local newSpeaker = ChatSpeaker.new(speakerName) :: Types.ChatSpeaker
     self.Speakers[speakerName:lower()] = newSpeaker
 
-    newSpeaker.AddChannel = function(speaker: Types.ChatSpeaker, channelName: string)
+    newSpeaker.JoinChannel = function(speaker: Types.ChatSpeaker, channelName: string)
         if table.find(speaker.ActiveChannels, channelName:lower()) or speaker.Player == nil then
             return
         end
@@ -165,6 +170,14 @@ function ChatConnector:AddSpeaker(speakerName: string): Types.ChatSpeaker
             table.insert(speaker.ActiveChannels, channelName:lower())
             foundChannel:AddUserAsync(speaker.Player.UserId)
         end
+    end
+
+    newSpeaker.SayMessage = function(speaker: Types.ChatSpeaker, message: string, channelName: string)
+        if speaker.Player then
+            error("Can't send message because Speaker is a player!")
+        end
+
+        ChatConnector:SendSystemMessage(message, self:GetChannel(channelName), speaker.Name)
     end
 
     return newSpeaker
