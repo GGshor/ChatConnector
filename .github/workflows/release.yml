@@ -1,0 +1,39 @@
+name: Create new draft release
+
+on:
+    workflow_dispatch:
+        inputs:
+            release_tag:
+                description: 'Version to release. (Example: v0.0.0)'
+                required: true
+                type: string
+            release_name:
+                description: 'The release name'
+                required: true
+                type: string
+
+jobs:
+    Deployment:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Install aftman
+              uses: ok-nick/setup-aftman@v0.4.2
+
+            - name: Selene check
+              run: |
+                selene .
+
+            - name: Build module
+              run: rojo build default.project.json -o ChatConnector.rbxm
+
+            - name: Create draft release
+              uses: ncipollo/release-action@v1.14.0
+              with:
+                name: ${{ inputs.release_name }}
+                tag: ${{ inputs.release_tag }}
+                prerelease: true
+                artifacts: 'ChatConnector.rbxm'
