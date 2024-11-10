@@ -1,6 +1,5 @@
 local TextChatService = game:GetService("TextChatService")
 
-local ChannelTabsConfiguration = TextChatService:WaitForChild("ChannelTabsConfiguration", 15) :: ChannelTabsConfiguration?
 local BubbleChatConfiguration = TextChatService:WaitForChild("BubbleChatConfiguration") :: BubbleChatConfiguration
 local ChatWindowConfiguration = TextChatService:WaitForChild("ChatWindowConfiguration") :: ChatWindowConfiguration
 local ChatInputBarConfiguration = TextChatService:WaitForChild("ChatInputBarConfiguration") :: ChatInputBarConfiguration
@@ -21,8 +20,8 @@ end
 
 local Convert = {
     ["ShowChannelsBar"] = function(newValue: boolean)
-        if ChannelTabsConfiguration then
-            ChannelTabsConfiguration.Enabled = defaultOrNewValue("ShowChannelsBar", "boolean", newValue)
+        if TextChatService:FindFirstChild("ChannelTabsConfiguration") then
+            TextChatService:FindFirstChild("ChannelTabsConfiguration").Enabled = defaultOrNewValue("ShowChannelsBar", "boolean", newValue)
         else
             warn("[ChatSettings] You don't have the channels feature yet! Please make sure to update your Roblox client if you think you should have it!")
         end
@@ -37,8 +36,8 @@ local Convert = {
         ChatWindowConfiguration.TextSize = defaultOrNewValue("ChatWindowTextSize", "number", newValue)
     end,
     ["ChatChannelsTabTextSize"] = function(newValue: number)
-        if ChannelTabsConfiguration then
-            ChannelTabsConfiguration.TextSize = defaultOrNewValue("ChatChannelsTabTextSize", "number", newValue)
+        if TextChatService:FindFirstChild("ChannelTabsConfiguration") then
+            TextChatService:FindFirstChild("ChannelTabsConfiguration").TextSize = defaultOrNewValue("ChatChannelsTabTextSize", "number", newValue)
         else
             warn("[ChatSettings] You don't have the channels feature yet! Please make sure to update your Roblox client if you think you should have it!")
         end
@@ -82,15 +81,15 @@ local Convert = {
         ChatInputBarConfiguration.TextColor3 = defaultOrNewValue("ChatBarTextColor", "Color3", newValue)
     end,
     ["ChannelsTabUnselectedColor"] = function(newValue: Color3)
-        if ChannelTabsConfiguration then
-            ChannelTabsConfiguration.BackgroundColor3 = defaultOrNewValue("ChannelsTabUnselectedColor", "Color3", newValue)
+        if TextChatService:FindFirstChild("ChannelTabsConfiguration") then
+            TextChatService:FindFirstChild("ChannelTabsConfiguration").BackgroundColor3 = defaultOrNewValue("ChannelsTabUnselectedColor", "Color3", newValue)
         else
             warn("[ChatSettings] You don't have the channels feature yet! Please make sure to update your Roblox client if you think you should have it!")
         end
     end,
     ["ChannelsTabSelectedColor"] = function(newValue: Color3)
-        if ChannelTabsConfiguration then
-            ChannelTabsConfiguration.SelectedTabColor3 = defaultOrNewValue("ChannelsTabSelectedColor", "Color3", newValue)
+        if TextChatService:FindFirstChild("ChannelTabsConfiguration") then
+            TextChatService:FindFirstChild("ChannelTabsConfiguration").SelectedTabColor3 = defaultOrNewValue("ChannelsTabSelectedColor", "Color3", newValue)
         else
             warn("[ChatSettings] You don't have the channels feature yet! Please make sure to update your Roblox client if you think you should have it!")
         end
