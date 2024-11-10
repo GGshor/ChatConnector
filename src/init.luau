@@ -244,6 +244,10 @@ if RunService:IsClient() then
             return properties
         end
 
+        if not speaker.Player then
+            message.PrefixText = `{speaker.Name}: `
+        end
+
         if speaker.ExtraData["Tags"] then
             local newPrefix = ""
             for _, tag: Types.ChatSpeakerTag in speaker.ExtraData["Tags"] do
