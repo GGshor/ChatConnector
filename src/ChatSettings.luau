@@ -15,7 +15,7 @@ Settings.ShowUserOwnFilteredMessage = true -- DEPRECATED
 Settings.ChatOnWithTopBarOff = false -- DEPRECATED
 Settings.ScreenGuiDisplayOrder = 6	-- DEPRECATED
 
-Settings.ShowFriendJoinNotification = true -- Players.Added: Player:IsFriend()
+Settings.ShowFriendJoinNotification = true -- TODO: Players.Added: Player:IsFriend()
 
 Settings.BubbleChatEnabled = Players.BubbleChat -- BubbleChatConfiguration.Enabled
 Settings.ClassicChatEnabled = Players.ClassicChat -- ChatWindowConfiguration.Enabled
@@ -35,7 +35,7 @@ Settings.ChatBarFont = Enum.Font.SourceSansBold -- ChatInputBarConfiguration.Fon
 ----[[ Color Settings ]]
 Settings.BackGroundColor = Color3.new(0, 0, 0) -- ChatWindowConfiguration.BackgroundColor3
 Settings.DefaultMessageColor = Color3.new(1, 1, 1) -- ChatWindowConfiguration.TextColor3
-Settings.DefaultNameColor = Color3.new(1, 1, 1) -- OnTextMessage
+Settings.DefaultNameColor = Color3.new(1, 1, 1) -- TODO: OnTextMessage
 Settings.ChatBarBackGroundColor = Color3.new(0, 0, 0) -- ChatInputBarConfiguration.BackgroundColor3
 Settings.ChatBarBoxColor = Color3.new(1, 1, 1) -- DEPRECATED
 Settings.ChatBarTextColor = Color3.new(0, 0, 0) -- ChatInputBarConfiguration.TextColor3
@@ -72,8 +72,8 @@ Settings.MessageHistoryLengthPerChannel = 50 -- DEPRECATED
 Settings.ShowJoinAndLeaveHelpText = false -- DEPRECATED
 
 ---[[ Message Settings ]]
-Settings.MaximumMessageLength = 200 -- OnTextMessage
-Settings.DisallowedWhiteSpace = {"\n", "\r", "\t", "\v", "\f"} -- OnTextMessage
+Settings.MaximumMessageLength = 200 -- TODO:  OnTextMessage
+Settings.DisallowedWhiteSpace = {"\n", "\r", "\t", "\v", "\f"} -- TODO:  OnTextMessage
 Settings.ClickOnPlayerNameToWhisper = true -- DEPRECATED
 Settings.ClickOnChannelNameToSetMainChannel = true -- DEPRECATED
 Settings.BubbleChatMessageTypes = {"Message", "Whisper"} -- DEPRECATED

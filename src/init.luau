@@ -8,6 +8,7 @@ local TextChatService = game:GetService("TextChatService")
 
 local Types = require(script:WaitForChild("Types"))
 local ChatChannel = require(script:WaitForChild("ChatChannel"))
+local LoadSettings = require(script:WaitForChild("LoadSettings"))
 
 local ChatConnector = {
     ChatChannels = {}
@@ -85,16 +86,20 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
     return newChannel
 end
 
---[=[
-    Connects the events fired from Server to the appropriate  methods.
-
-    @param methodName string -- The method name.
-    @param ... -- The arguments that should be given to the method.
-]=]
+-- Sets up the client events
 if RunService:IsClient() then
+    --[=[
+        Connects the events fired from Server to the appropriate  methods.
+
+        @param methodName string -- The method name.
+        @param ... -- The arguments that should be given to the method.
+    ]=]
     ClientEvent.OnClientEvent:Connect(function(methodName: string, ...)
         task.spawn(ChatConnector[methodName], ChatConnector, ...)
     end)
+
+    -- Load in settings
+    LoadSettings()
 end
 
 return ChatConnector
