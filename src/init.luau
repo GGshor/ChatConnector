@@ -3,18 +3,22 @@
 ]]
 
 
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TextChatService = game:GetService("TextChatService")
 
 local Types = require(script:WaitForChild("Types"))
 local ChatChannel = require(script:WaitForChild("ChatChannel"))
+local ChatSpeaker = require(script:WaitForChild("ChatSpeaker"))
 local LoadSettings = require(script:WaitForChild("LoadSettings"))
 
 local ChatConnector = {
-    ChatChannels = {}
+    ChatChannels = {},
+    Speakers = {}
 } :: Types.ChatConnectorAPI
 
 local ClientEvent = script:WaitForChild("ClientEvent")
+local ClientRequest = script:WaitForChild("ClientRequest")
 
 --[=[
     Transforms the Color3 instance to a RGB string.
@@ -59,6 +63,21 @@ function ChatConnector:Chat(partOrCharacter: Instance , message: string, color: 
     end
 end
 
+--[=[
+    Sends a system message, mostly used interal.
+
+    @param message string -- The text you want to send
+    @param channelName string -- The channel name
+
+    @return nil
+]=]
+function ChatConnector:SendSystemMessage(message: string, textChannel: Types.ChatChannel)
+    if RunService:IsClient() then
+        textChannel._textChannel:DisplaySystemMessage(message)
+    else
+        ClientEvent:FireAllClients("SendSystemMessage", message, textChannel)
+    end
+end
 
 --[=[
     Creates a new TextChannel if it doesn't exist already.
@@ -79,8 +98,15 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
         return self.ChatChannels[channelName]
     end
 
+    -- Create TextChannels folder if Roblox doesn't make it
+    if TextChatService.CreateDefaultTextChannels == false and TextChatService:FindFirstChild("TextChannels") == nil then
+        local channelsFolder = Instance.new("Folder")
+        channelsFolder.Name = "TextChannels"
+        channelsFolder.Parent = TextChatService
+    end
+
     -- Create the channel and save it
-    local newChannel = ChatChannel.new(channelName, autoJoin)
+    local newChannel = ChatChannel.new(channelName, autoJoin) :: Types.ChatChannel
     self.ChatChannels[channelName:lower()] = newChannel
 
     return newChannel
@@ -94,12 +120,84 @@ end
     @return Types.ChatChannel?
 ]=]
 function ChatConnector:GetChannel(channelName: string): Types.ChatChannel?
+    -- Prevent Clients from running this method
+    if RunService:IsClient() then
+        return
+    end
+
     -- "All" is the old general channel name
     if channelName:lower() == "all" then
         channelName = "General"
     end
 
     return self.ChatChannels[channelName:lower()]
+end
+
+--[=[
+    Creates a new Speaker if it doesn't exist already.
+
+    @param speakerName string -- The speaker name
+
+    @return Types.ChatSpeaker
+]=]
+function ChatConnector:AddSpeaker(speakerName: string): Types.ChatSpeaker
+    -- Prevent Clients from running this method
+    if RunService:IsClient() then
+        return
+    end
+
+    -- Check if channel is already registered
+    if self.Speakers[speakerName:lower()] then
+        return self.Speakers[speakerName:lower()]
+    end
+
+    -- Create the channel and save it
+    local newSpeaker = ChatSpeaker.new(speakerName) :: Types.ChatSpeaker
+    self.Speakers[speakerName:lower()] = newSpeaker
+
+    newSpeaker.AddChannel = function(speaker: Types.ChatSpeaker, channelName: string)
+        if table.find(speaker.ActiveChannels, channelName:lower()) or speaker.Player == nil then
+            return
+        end
+
+        local foundChannel = self:GetChannel(channelName)
+        if foundChannel then
+            table.insert(speaker.ActiveChannels, channelName:lower())
+            foundChannel:AddUserAsync(speaker.Player.UserId)
+        end
+    end
+
+    return newSpeaker
+end
+
+--[=[
+    Gets a speaker
+]=]
+function ChatConnector:GetSpeaker(speakerName: string): Types.ChatSpeaker
+    if RunService:IsClient() then
+        return ClientRequest:InvokeServer("GetSpeaker", speakerName)
+    end
+
+    if self.Speakers[speakerName:lower()] then
+        return self.Speakers[speakerName:lower()]
+    end
+
+    -- Check if player has a speaker
+    for _, players in Players:GetPlayers() do
+        if players.Name:lower():match(speakerName:lower()) then
+            return self:AddSpeaker(players.Name)
+        end
+    end
+end
+
+
+-- Sets up the server events
+if RunService:IsServer() then
+    ClientRequest.OnServerInvoke = function(_, method: string, ...: any...)
+        if method == "GetSpeaker" then
+            return ChatConnector:GetSpeaker(...)
+        end
+    end
 end
 
 -- Sets up the client events
@@ -116,6 +214,44 @@ if RunService:IsClient() then
 
     -- Load in settings
     LoadSettings()
+
+    -- Customize incoming messages
+    TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+        local properties = Instance.new("TextChatMessageProperties")
+        local foundPlayer = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
+        local speaker: Types.ChatSpeaker?
+        
+        if foundPlayer then
+            speaker = ChatConnector:GetSpeaker(foundPlayer.Name)
+        else
+            speaker = ChatConnector:GetSpeaker(message.Metadata)
+        end
+
+        if not speaker then
+            return properties
+        end
+
+        if speaker.ExtraData["Tags"] then
+            local newPrefix = ""
+            for _, tag: Types.ChatSpeakerTag in speaker.ExtraData["Tags"] do
+                newPrefix = `{newPrefix}<font color="rgb({Color3ToRGBString(tag.TagColor or Color3.fromRGB(255, 0, 255))})">[{tag.TagText or "???"}]</font> `
+            end
+
+            if speaker.ExtraData["NameColor"] then
+                newPrefix = `{newPrefix}<font color="rgb({Color3ToRGBString(speaker.ExtraData["NameColor"])})">{message.PrefixText}</font>`
+            else
+                newPrefix = `{newPrefix}{message.PrefixText}`
+            end
+
+            properties.PrefixText = newPrefix
+        end
+
+        if speaker.ExtraData["ChatColor"] then
+            properties.Text = `<font color="rgb({Color3ToRGBString(speaker.ExtraData["ChatColor"])})">{message.Text}</font>`
+        end
+
+        return properties
+    end
 end
 
 return ChatConnector

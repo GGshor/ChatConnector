@@ -1,17 +1,36 @@
+export type ChatSpeakerTag = {
+    TagColor: Color3,
+    TagText: string
+}
+
+export type ChatSpeaker = {
+    Name: string,
+    Player: Player?,
+    ExtraData: {[string]: any},
+    ActiveChannels: {},
+
+    AddChannel: (channelName: string) -> (),
+    SetExtraData: (dataName: string, dataValue: any) -> ()
+}
+
 export type ChatChannel = {
     Name: string,
     Speakers: {[string]: TextSource},
     AutoJoin: boolean,
     Joinable: boolean, -- Deprecated, but maybe used in Future?
-    Private: boolean -- Deprecated, but good feature for ChatChannelService?
+    Private: boolean, -- Deprecated, but good feature for ChatChannelService?
+
+    AddUserAsync: (userid: number) -> ()
 }
 
 export type ChatConnectorAPI = {
     ChatChannels: {[string]: ChatChannel},
+    Speakers: {[string]: ChatSpeaker},
 
     Chat: (self: ChatConnectorAPI, partOrCharacter: Instance , message: string, color: Color3?) -> (),
     AddChannel: (self: ChatConnectorAPI, channelName: string, autoJoin: boolean?) -> ChatChannel,
-    GetChannel: (self: ChatConnectorAPI, channelName: string) -> ChatChannel?
+    GetChannel: (self: ChatConnectorAPI, channelName: string) -> ChatChannel?,
+    AddSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker
 }
 
 export type ChatSettings = {

@@ -15,18 +15,27 @@ ChatChannel.__index = ChatChannel
 
     @return TextChannel? -- The found textchannel
 ]=]
-local function findTextChannel(textChannelName): TextChannel?
+local function findTextChannel(textChannelName: string): TextChannel?
     local descendants = TextChatService:GetDescendants()
     
     -- Select first text channel which matches the name
     for _, textChannel: TextChannel in descendants do
-        if textChannel.Name == textChannelName and textChannel:IsA("TextChannel") then
+        if textChannel.Name:gsub("RBX", ""):lower() == textChannelName:lower() and textChannel:IsA("TextChannel") then
             return textChannel
         end
     end
 
     -- Return nil just to be sure
     return nil
+end
+
+--[=[
+    Adds a player to the channel.
+
+    @param userid number -- The userid of player
+]=]
+function ChatChannel:AddUserAsync(userid: number)
+    self._textChannel:AddUserAsync(userid)
 end
 
 --[=[
@@ -69,7 +78,7 @@ function ChatChannel.new(channelName: string, autoJoin: boolean?): Types.ChatCha
     if not self._textChannel then
         self._textChannel = Instance.new("TextChannel")
         self._textChannel.Name = channelName
-        self._textChannel.Parent = TextChatService
+        self._textChannel.Parent = TextChatService:WaitForChild("TextChannels")
     end
 
     -- Set auto join
