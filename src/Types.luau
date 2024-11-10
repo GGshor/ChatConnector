@@ -10,7 +10,8 @@ export type ChatConnectorAPI = {
     ChatChannels: {[string]: ChatChannel},
 
     Chat: (self: ChatConnectorAPI, partOrCharacter: Instance , message: string, color: Color3?) -> (),
-    AddChannel: (self: ChatConnectorAPI, channelName: string, autoJoin: boolean?) -> ChatChannel
+    AddChannel: (self: ChatConnectorAPI, channelName: string, autoJoin: boolean?) -> ChatChannel,
+    GetChannel: (self: ChatConnectorAPI, channelName: string) -> ChatChannel?
 }
 
 export type ChatSettings = {
