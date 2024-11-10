@@ -19,29 +19,13 @@ Displays a text bubble above a part or character.
 ChatConnector:Chat(workspace.SpawnLocation, "Hello!", Color3.fromRGB(0, 255, 0))  -- Green text
 ```
 
+### `ChatConnector:AddChannel(channelName, autoJoin)`
+Creates a new `TextChannel` if it doesn't exist already.
 
-## Sequence diagram of flows:
-```mermaid
-sequenceDiagram
-    participant User
-    participant ChatService
-    participant Client
-    participant TextChatService
-    participant Channel
+- **`channelName`** (string): The name of the channel to add.
+- **`autoJoin`** (boolean, optional): Whether users should automatically join the channel. Defaults to `true` if not provided.
 
-    %% Chat Flow
-    User ->> ChatService: Chat(part, message, color)
-    ChatService -->> Client: fireEvent()
-    Client ->> TextChatService: DisplayBubble(part, message, color)
-
-    %% AddChannel Flow
-    User ->> ChatService: AddChannel(channelName, autoJoin)
-    ChatService ->> TextChatService: checkIfChannelExists(channelName)
-    alt Channel exists
-        TextChatService -->> ChatService: Channel already exists
-    else Channel does not exist
-        TextChatService ->> Channel: createNewChannel(channelName, autoJoin)
-        Channel -->> TextChatService: Channel created
-    end
-
+#### Example:
+```lua
+local newChannel = ChatConnector:AddChannel("SecretTeam")
 ```
