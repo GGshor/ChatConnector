@@ -40,10 +40,10 @@ local Convert = {
         ChatInputBarConfiguration.TextSize = defaultOrNewValue("ChatBarTextSize", "number", newValue)
     end,
     ["DefaultFont"] = function(newValue: Enum.Font)
-        ChatWindowConfiguration.FontFace = defaultOrNewValue("DefaultFont", "EnumItem", newValue)
+        ChatWindowConfiguration.FontFace = Font.fromEnum(defaultOrNewValue("DefaultFont", "EnumItem", newValue))
     end,
     ["ChatBarFont"] = function(newValue: Enum.Font)
-        ChatInputBarConfiguration.FontFace = defaultOrNewValue("ChatBarFont", "EnumItem", newValue)
+        ChatInputBarConfiguration.FontFace = Font.fromEnum(defaultOrNewValue("ChatBarFont", "EnumItem", newValue))
     end,
     ["BackGroundColor"] = function(newValue: Color3)
         ChatWindowConfiguration.BackgroundColor3 = defaultOrNewValue("BackGroundColor", "Color3", newValue)
