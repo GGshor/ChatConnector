@@ -40,10 +40,27 @@ local Convert = {
         ChatInputBarConfiguration.TextSize = defaultOrNewValue("ChatBarTextSize", "number", newValue)
     end,
     ["DefaultFont"] = function(newValue: Enum.Font)
-        ChatWindowConfiguration.FontFace = Font.fromEnum(defaultOrNewValue("DefaultFont", "EnumItem", newValue))
+        local success, response = pcall(Font.fromEnum, defaultOrNewValue("DefaultFont", "EnumItem", newValue))
+        if success then
+            ChatWindowConfiguration.FontFace = response
+            return
+        end
+
+        warn(`[ChatSettings] {newValue} is not a supported font anymore! Defaulting back to: Enum.Font.BuilderSansMedium.`)
+
+        ChatWindowConfiguration.FontFace = Font.fromEnum(Enum.Font.BuilderSansMedium)
     end,
     ["ChatBarFont"] = function(newValue: Enum.Font)
-        ChatInputBarConfiguration.FontFace = Font.fromEnum(defaultOrNewValue("ChatBarFont", "EnumItem", newValue))
+        local success, response = pcall(Font.fromEnum, defaultOrNewValue("ChatBarFont", "EnumItem", newValue))
+
+        if success then
+            ChatInputBarConfiguration.FontFace = response
+            return
+        end
+
+        warn(`[ChatSettings] {newValue} is not a supported font anymore! Defaulting back to: Enum.Font.BuilderSansMedium.`)
+
+        ChatInputBarConfiguration.FontFace = Font.fromEnum(Enum.Font.BuilderSansMedium)
     end,
     ["BackGroundColor"] = function(newValue: Color3)
         ChatWindowConfiguration.BackgroundColor3 = defaultOrNewValue("BackGroundColor", "Color3", newValue)
