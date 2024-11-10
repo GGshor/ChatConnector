@@ -16,7 +16,19 @@ Displays a text bubble above a part or character.
 
 #### Example:
 ```lua
-ChatConnector:Chat(workspace.SpawnLocation, "Hello!", Color3.fromRGB(0, 255, 0))  -- Green text
+ChatConnector:Chat(workspace.SpawnLocation, "Hello!", Color3.fromRGB(0, 255, 0))
+```
+
+### `ChatConnector:SendSystemMessage(message, channel, metadata)`
+Sends a system message to the channel.
+
+- **`message`** (string): Text to display.
+- **`channel`** (ChatChannel): The channel to send it to.
+- **`metadata`** (string, optional): Any metadata to send along with it
+
+#### Example:
+```lua
+ChatConnector:SendSystemMessage("Hello!", ChatConnector:GetChannel("SecretTeam"), "System")
 ```
 
 ### `ChatConnector:AddChannel(channelName, autoJoin)`
@@ -33,9 +45,29 @@ local newChannel = ChatConnector:AddChannel("SecretTeam")
 ### `ChatConnector:GetChannel(channelName)`
 Returns a TextChannel if it exists.
 
-- **`channelName`** (string): The name of the channel to add.
+- **`channelName`** (string): The name of the channel to get.
 
 #### Example:
 ```lua
 local foundChannel = ChatConnector:GetChannel("SecretTeam")
+```
+
+### `ChatConnector:AddSpeaker(speakerName)`
+Creates a new `ChatSpeaker` if it doesn't exist already.
+
+- **`speakerName`** (string): The name of the speaker to add.
+
+#### Example:
+```lua
+local newSpeaker = ChatConnector:AddSpeaker("Alex")
+```
+
+### `ChatConnector:GetSpeaker(speakerName)`
+Returns a ChatSpeaker if it exists.
+
+- **`speakerName`** (string): The name of the speaker to get.
+
+#### Example:
+```lua
+local foundSpeaker = ChatConnector:GetSpeaker("Alex")
 ```
