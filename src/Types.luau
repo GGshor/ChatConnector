@@ -26,7 +26,9 @@ export type ChatChannel = {
 
 export type ChatConnectorAPI = {
     ChatChannels: {[string]: ChatChannel},
-    Speakers: {[string]: ChatSpeaker},
+	Speakers: {[string]: ChatSpeaker},
+
+	Color3ToRGBString: (self: ChatConnectorAPI, color: Color3) -> string,
 
     Chat: (self: ChatConnectorAPI, partOrCharacter: Instance , message: string, color: Color3?) -> (),
     SendSystemMessage: (self: ChatConnectorAPI, message: string, textChannel: ChatChannel, metadata: string?) -> (),

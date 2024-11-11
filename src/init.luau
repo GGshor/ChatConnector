@@ -27,7 +27,7 @@ local ClientRequest = script:WaitForChild("ClientRequest")
 
     @return string -- The made string
 ]=]
-local function Color3ToRGBString(color: Color3): string
+function ChatConnector:Color3ToRGBString(color: Color3): string
     return `{math.floor(color.R * 255 + 0.5)}, {math.floor(color.G * 255 + 0.5)}, {math.floor(color.B * 255 + 0.5)}`
 end
 
@@ -54,7 +54,7 @@ function ChatConnector:Chat(partOrCharacter: Instance , message: string, color: 
 
         -- Wrap message with color if color was given
         if typeof(color) == "Color3" then
-            TextChatService:DisplayBubble(partOrCharacter, `<font color="rgb({Color3ToRGBString(color)})">{message}</font>`)
+            TextChatService:DisplayBubble(partOrCharacter, `<font color="rgb({ChatConnector:Color3ToRGBString(color)})">{message}</font>`)
         else
             TextChatService:DisplayBubble(partOrCharacter, message)
         end
@@ -95,7 +95,7 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
 
     -- All is the old name
     if channelName:lower() == "all" then
-        channelName = "General"
+        channelName = "RBXGeneral"
     end
 
     -- Check if channel is already registered
@@ -124,18 +124,18 @@ end
 
     @return Types.ChatChannel?
 ]=]
-function ChatConnector:GetChannel(channelName: string): Types.ChatChannel?
+function ChatConnector:GetChannel(channelName: string, clientRequest: boolean?): Types.ChatChannel?
     -- Prevent Clients from running this method
     if RunService:IsClient() then
-        return
+        return ClientRequest:InvokeServer("GetChannel", channelName)
     end
 
     -- "All" is the old general channel name
     if channelName:lower() == "all" then
-        channelName = "General"
+        channelName = "RBXGeneral"
     end
 
-    return self.ChatChannels[channelName:lower()] or self:AddChannel(channelName)
+    return self.ChatChannels[channelName:lower()] or clientRequest == nil and self:AddChannel(channelName)
 end
 
 --[=[
@@ -172,12 +172,12 @@ function ChatConnector:AddSpeaker(speakerName: string): Types.ChatSpeaker
         end
     end
 
-    newSpeaker.SayMessage = function(speaker: Types.ChatSpeaker, message: string, channelName: string)
+    newSpeaker.SayMessage = function(speaker: Types.ChatSpeaker, message: string, channelName: string?)
         if speaker.Player then
             error("Can't send message because Speaker is a player!")
         end
 
-        ChatConnector:SendSystemMessage(message, self:GetChannel(channelName), speaker.Name)
+        ChatConnector:SendSystemMessage(message, self:GetChannel(channelName or "All"), speaker.Name)
     end
 
     return newSpeaker
@@ -209,6 +209,8 @@ if RunService:IsServer() then
     ClientRequest.OnServerInvoke = function(_, method: string, ...: any...)
         if method == "GetSpeaker" then
             return ChatConnector:GetSpeaker(...)
+        elseif method == "GetChannel" then
+            return ChatConnector:GetChannel(..., true)
         end
     end
 end
@@ -248,23 +250,23 @@ if RunService:IsClient() then
             message.PrefixText = `{speaker.Name}: `
         end
 
+        local newPrefix = ""
         if speaker.ExtraData["Tags"] then
-            local newPrefix = ""
             for _, tag: Types.ChatSpeakerTag in speaker.ExtraData["Tags"] do
-                newPrefix = `{newPrefix}<font color="rgb({Color3ToRGBString(tag.TagColor or Color3.fromRGB(255, 0, 255))})">[{tag.TagText or "???"}]</font> `
+                newPrefix = `{newPrefix}<font color="rgb({ChatConnector:Color3ToRGBString(tag.TagColor or Color3.fromRGB(255, 0, 255))})">[{tag.TagText or "???"}]</font> `
             end
-
-            if speaker.ExtraData["NameColor"] then
-                newPrefix = `{newPrefix}<font color="rgb({Color3ToRGBString(speaker.ExtraData["NameColor"])})">{message.PrefixText}</font>`
-            else
-                newPrefix = `{newPrefix}{message.PrefixText}`
-            end
-
-            properties.PrefixText = newPrefix
         end
 
+        if speaker.ExtraData["NameColor"] then
+            newPrefix = `{newPrefix}<font color="rgb({ChatConnector:Color3ToRGBString(speaker.ExtraData["NameColor"])})">{message.PrefixText}</font>`
+        else
+            newPrefix = `{newPrefix}{message.PrefixText}`
+        end
+
+        properties.PrefixText = newPrefix
+
         if speaker.ExtraData["ChatColor"] then
-            properties.Text = `<font color="rgb({Color3ToRGBString(speaker.ExtraData["ChatColor"])})">{message.Text}</font>`
+            properties.Text = `<font color="rgb({ChatConnector:Color3ToRGBString(speaker.ExtraData["ChatColor"])})">{message.Text}</font>`
         end
 
         return properties
