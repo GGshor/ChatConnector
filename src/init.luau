@@ -124,7 +124,7 @@ end
 
     @return Types.ChatChannel?
 ]=]
-function ChatConnector:GetChannel(channelName: string, clientRequest: boolean?): Types.ChatChannel?
+function ChatConnector:GetChannel(channelName: string, limitedRequest: boolean?): Types.ChatChannel?
     -- Prevent Clients from running this method
     if RunService:IsClient() then
         return ClientRequest:InvokeServer("GetChannel", channelName)
@@ -135,7 +135,15 @@ function ChatConnector:GetChannel(channelName: string, clientRequest: boolean?):
         channelName = "RBXGeneral"
     end
 
-    return self.ChatChannels[channelName:lower()] or clientRequest == nil and self:AddChannel(channelName)
+    if self.ChatChannels[channelName:lower()] then
+        return self.ChatChannels[channelName:lower()]
+    elseif typeof(limitedRequest) == "nil" then
+        for _, channel: TextChannel in TextChatService:WaitForChild("TextChannels"):GetDescendants() do
+            if channel.Name:lower() == channelName:lower() then
+                return self:AddChannel(channelName)
+            end
+        end
+    end
 end
 
 --[=[
@@ -172,12 +180,12 @@ function ChatConnector:AddSpeaker(speakerName: string): Types.ChatSpeaker
         end
     end
 
-    newSpeaker.SayMessage = function(speaker: Types.ChatSpeaker, message: string, channelName: string?)
+    newSpeaker.SayMessage = function(speaker: Types.ChatSpeaker, message: string, channelName: string)
         if speaker.Player then
             error("Can't send message because Speaker is a player!")
         end
 
-        ChatConnector:SendSystemMessage(message, self:GetChannel(channelName or "All"), speaker.Name)
+        ChatConnector:SendSystemMessage(message, self:GetChannel(channelName or "All"), `ChatConnector.ChatSpeaker.{speaker.Name}`)
     end
 
     return newSpeaker
@@ -213,6 +221,24 @@ if RunService:IsServer() then
             return ChatConnector:GetChannel(..., true)
         end
     end
+
+    -- Add system speaker
+    ChatConnector:AddSpeaker("System"):SetExtraData({
+        ["NameColor"] = Color3.new(1, 0, 0),
+        ["ChatColor"] = Color3.new(1, 0, 0)
+    })
+
+    local function OnChannelAdded(channel: TextChannel?)
+        if channel:IsA("TextChannel") == false then
+            return
+        end
+
+        ChatConnector:AddChannel(channel.Name)
+    end
+    TextChatService:WaitForChild("TextChannels").DescendantAdded:Connect(OnChannelAdded)
+    for _, channel in TextChatService:GetDescendants() do
+        task.spawn(OnChannelAdded, channel)
+    end
 end
 
 -- Sets up the client events
@@ -230,46 +256,124 @@ if RunService:IsClient() then
     -- Load in settings
     LoadSettings()
 
-    -- Customize incoming messages
+    -- Replicate messages from other channels that player is in to General
     TextChatService.OnIncomingMessage = function(message: TextChatMessage)
         local properties = Instance.new("TextChatMessageProperties")
-        local foundPlayer = message.TextSource and Players:GetPlayerByUserId(message.TextSource.UserId)
+        if message.TextSource and message.TextChannel.Name:match("RBXGeneral") == nil and message.Status == Enum.TextChatMessageStatus.Success and Players:GetPlayerByUserId(message.TextSource.UserId) ~= Players.LocalPlayer then
+            ChatConnector:SendSystemMessage(message.Text, ChatConnector:GetChannel("All"), `ChatConnector.Replicator.{message.TextChannel.Name}.{Players:GetPlayerByUserId(message.TextSource.UserId).Name}`)
+        end
+        return properties
+    end
+
+    -- Customize incoming messages
+    TextChatService.OnChatWindowAdded = function(message: TextChatMessage)	
+        local properties = TextChatService.ChatWindowConfiguration:DeriveNewMessageProperties()
         local speaker: Types.ChatSpeaker?
-        
-        if foundPlayer then
-            speaker = ChatConnector:GetSpeaker(foundPlayer.Name)
-        else
-            speaker = ChatConnector:GetSpeaker(message.Metadata)
+        local tags = {}
+
+        --// Skip if meta contains roblox message
+        if message.Metadata:match("Roblox.") then
+            return properties
+        end
+
+        if message.Metadata:match("ChatConnector.Replicator") and message.Metadata ~= "" then
+            local channel = message.Metadata:split(".")[3]
+            speaker = ChatConnector:GetSpeaker(message.Metadata:split(".")[4])
+
+            if channel:match("RBXTeam") then
+                table.insert(tags, {
+                    TagColor = speaker.Player.TeamColor.Color,
+                    TagText = speaker.Player.Team.Name
+                })
+            elseif channel:match("RBXWhisper:") then
+                table.insert(tags, {
+                    TagColor = Color3.new(1, 1, 1),
+                    TagText = "Whisper"
+                })
+            else
+                table.insert(tags, {
+                    TagColor = Color3.new(1, 1, 1),
+                    TagText = channel:gsub("RBX", "")
+                })
+            end
+        elseif message.TextSource then
+            speaker = ChatConnector:GetSpeaker(Players:GetPlayerByUserId(message.TextSource.UserId).Name)
+        elseif typeof(message.Metadata) == "string" and message.Metadata ~= "" then
+            speaker = ChatConnector:GetSpeaker(message.Metadata:split("ChatConnector.ChatSpeaker.")[2])
+        end
+
+        if message.TextSource == nil and message.Metadata:match("ChatConnector.ChatSpeaker") == nil then	
+            if message.TextChannel.Name:match("RBXWhisper:") then
+                local whisper = TextChatService:WaitForChild("TextChatCommands"):WaitForChild("RBXWhisperCommand") :: TextChatCommand
+                local split = message.TextChannel.Name:gsub("RBXWhisper:"):split("_")
+                local player1, player2 = Players:GetPlayerByUserId(split[1]), Players:GetPlayerByUserId(split[2])
+
+                local target = player1 ~= Players.LocalPlayer and player1 or player2
+
+                properties.Text = `<font color="rgb({ChatConnector:Color3ToRGBString(Color3.new(1, 0 , 0))})">Run /{whisper.PrimaryAlias} {target.DisplayName}!</font>`
+                properties.PrefixText = "System:"
+            else
+                properties.Text = `<font color="rgb({ChatConnector:Color3ToRGBString(Color3.new(1, 0 , 0))})">You can't send messages here!</font>`
+                properties.PrefixText = "System:"
+            end
         end
 
         if not speaker then
             return properties
         end
 
-        if not speaker.Player then
+        --// Load tags
+        for _, foundTag in speaker.ExtraData["Tags"] or {} do
+            table.insert(tags, foundTag)
+        end
+
+        if speaker.Player and message.PrefixText == "" then
+            if speaker.Player.Team then
+                message.PrefixText = `<font color="rgb({ChatConnector:Color3ToRGBString(speaker.Player.TeamColor.Color)})">{speaker.Player.DisplayName}: </font>`
+            else
+                message.PrefixText = `{speaker.Player.DisplayName}: `
+            end
+        elseif not speaker.Player then
             message.PrefixText = `{speaker.Name}: `
         end
 
+        --// Add tags to text
         local newPrefix = ""
-        if speaker.ExtraData["Tags"] then
-            for _, tag: Types.ChatSpeakerTag in speaker.ExtraData["Tags"] do
-                newPrefix = `{newPrefix}<font color="rgb({ChatConnector:Color3ToRGBString(tag.TagColor or Color3.fromRGB(255, 0, 255))})">[{tag.TagText or "???"}]</font> `
-            end
+        for _, tag: Types.ChatSpeakerTag in tags do
+            newPrefix = `{newPrefix}<font color="rgb({ChatConnector:Color3ToRGBString(tag.TagColor or Color3.fromRGB(255, 0, 255))})">[{tag.TagText or "???"}]</font> `
         end
 
+        --// Add color to the name that overrides the default color
         if speaker.ExtraData["NameColor"] then
             newPrefix = `{newPrefix}<font color="rgb({ChatConnector:Color3ToRGBString(speaker.ExtraData["NameColor"])})">{message.PrefixText}</font>`
         else
-            newPrefix = `{newPrefix}{message.PrefixText}`
+            newPrefix = `{newPrefix}<font color="rgb({ChatConnector:Color3ToRGBString(speaker.Player and speaker.Player.TeamColor.Color or Color3.new(1, 1, 1))})">{message.PrefixText}</font>`
         end
 
         properties.PrefixText = newPrefix
 
+        --// Update text color
         if speaker.ExtraData["ChatColor"] then
             properties.Text = `<font color="rgb({ChatConnector:Color3ToRGBString(speaker.ExtraData["ChatColor"])})">{message.Text}</font>`
+        else
+            properties.Text = message.Text
         end
 
         return properties
+    end
+
+    --// Fix whisper chat if command is enabled
+    if TextChatService.CreateDefaultCommands == true then
+        local whisper = TextChatService:WaitForChild("TextChatCommands"):WaitForChild("RBXWhisperCommand") :: TextChatCommand
+        TextChatService:WaitForChild("TextChannels").ChildAdded:Connect(function(newChannel: TextChannel)
+            if newChannel.Name:match(Players.LocalPlayer.UserId) then
+                local split = newChannel.Name:gsub("RBXWhisper:", ""):split("_")
+                local player1, player2 = Players:GetPlayerByUserId(split[1]), Players:GetPlayerByUserId(split[2])
+
+                local target = player1 ~= Players.LocalPlayer and player1 or player2
+                newChannel:SendAsync(`{whisper.PrimaryAlias} {target.DisplayName}`)
+            end
+        end)
     end
 end
 
