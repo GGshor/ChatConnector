@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local TextChatService = game:GetService("TextChatService")
 
 local ChatConnector = require(ReplicatedStorage:WaitForChild("ChatConnector"))
 local TestPart = Workspace:WaitForChild("SpawnLocation")
@@ -32,11 +33,27 @@ task.delay(2, function()
 end)
 
 while true do
-    ChatConnector:Chat(TestPart, "Colors 🥳", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        ChatConnector:Chat(TestPart, "Colors 🥳", Color3.fromRGB(math.random(1, 255), math.random(1, 255), math.random(1, 255)))
 
-    task.wait(math.random(1, 5))
+        task.wait(math.random(1, 5))
 
-    ChatConnector:Chat(TestPart, "No colors 😭")
+        ChatConnector:Chat(TestPart, "No colors 😭")
 
-    task.wait(math.random(1, 5))
+        task.wait(math.random(1, 5))
+    else
+        -- Demo place is using old chat
+        ChatConnector:Chat(TestPart, "Colors 🥳", Enum.ChatColor.Red)
+
+        task.wait(math.random(1, 5))
+
+        ChatConnector:Chat(TestPart, "No colors 😭")
+
+        task.wait(math.random(1, 5))
+
+        ChatConnector:Chat(TestPart, "Colors 🥳", Enum.ChatColor.Blue)
+
+        task.wait(math.random(1, 5))
+    end
+
 end

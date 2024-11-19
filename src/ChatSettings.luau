@@ -2,6 +2,12 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local Types = require(script.Parent:WaitForChild("Types"))
+local LegacySupport = require(script.Parent:WaitForChild("LegacySupport"))
+
+-- If we're running on legacy chat, return old chat settings module
+if LegacySupport("_InternalLegacyCheck") == true then
+	return require(game:GetService("Chat"):WaitForChild("ClientChatModules"):WaitForChild("ChatSettings"))
+end
 
 local Settings = {}
 
