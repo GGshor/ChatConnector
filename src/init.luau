@@ -5,6 +5,7 @@
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 local TextChatService = game:GetService("TextChatService")
 
 local Types = require(script:WaitForChild("Types"))
@@ -16,7 +17,8 @@ local ChatColorConverter = require(script:WaitForChild("ChatColorConverter"))
 
 local ChatConnector = {
     ChatChannels = {},
-    Speakers = {}
+    Speakers = {},
+    _channelAddedBind = RunService:IsServer() and LegacySupport("_InternalLegacyCheck") == true and Instance.new("BindableEvent")
 } :: Types.ChatConnectorAPI
 
 local ClientEvent = script:WaitForChild("ClientEvent")
@@ -83,14 +85,14 @@ end
     @return nil
 ]=]
 function ChatConnector:SendSystemMessage(message: string, textChannel: Types.ChatChannel, metadata: string?)
-    local legacyResponse = LegacySupport("SendSystemMessage", message)
-
-    -- If we're running legacy, return legacy response
-    if legacyResponse ~= false then
-        return legacyResponse
-    end
-
     if RunService:IsClient() then
+        local legacyResponse = LegacySupport("SendSystemMessage", message)
+
+        -- If we're running legacy, return legacy response
+        if legacyResponse ~= false then
+            return legacyResponse
+        end
+
         textChannel._textChannel:DisplaySystemMessage(message, metadata)
     else
         ClientEvent:FireAllClients("SendSystemMessage", message, textChannel, metadata)
@@ -139,6 +141,12 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
     local newChannel = ChatChannel.new(channelName, autoJoin) :: Types.ChatChannel
     self.ChatChannels[channelName:lower()] = newChannel
 
+    if channelName:lower() == "all" then
+        ChatConnector._channelAddedBind:Fire("All")
+    else
+        ChatConnector._channelAddedBind:Fire(channelName)
+    end
+
     return newChannel
 end
 
@@ -150,7 +158,7 @@ end
     @return Types.ChatChannel?
 ]=]
 function ChatConnector:GetChannel(channelName: string, limitedRequest: boolean?): Types.ChatChannel?
-    local legacyResponse = LegacySupport("SendSystemMessage", channelName)
+    local legacyResponse = LegacySupport("GetChannel", channelName)
 
     -- If we're running legacy, return legacy response
     if legacyResponse ~= false then
@@ -290,6 +298,7 @@ if RunService:IsServer() then
         end
     else
         warn("[ChatConnector] Legacy chat is still enabled! Methods will return their original response from the legacy chat!")
+        ChatConnector.ChannelAdded = LegacySupport("_InternalChannelAddedEvent")
     end
 end
 
@@ -306,6 +315,13 @@ if RunService:IsClient() then
         ClientEvent.OnClientEvent:Connect(function(methodName: string, ...)
             task.spawn(ChatConnector[methodName], ChatConnector, ...)
         end)
+
+        --[[
+            Connects the event for when Server adds a new channel.
+
+            @param channelName string -- The channel name
+        ]]
+        ChatConnector.ChannelAdded = ChatConnector._channelAddedBind.Event
 
         -- Load in settings
         LoadSettings()

@@ -27,6 +27,7 @@ export type ChatChannel = {
 export type ChatConnectorAPI = {
     ChatChannels: {[string]: ChatChannel},
 	Speakers: {[string]: ChatSpeaker},
+    ChannelAdded: RBXScriptSignal,
 
 	Color3ToRGBString: (self: ChatConnectorAPI, color: Color3) -> string,
 

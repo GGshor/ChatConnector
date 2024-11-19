@@ -27,6 +27,11 @@ return function (method: string, ...: any...): any
         return true
     end
 
+    -- Internal API call to return the connection to the ChannelAdded event
+    if method == "_InternalChannelAddedEvent" then
+        return ChatServerModule.ChannelAdded
+    end
+
     -- Just here for easy switching between legacy and text chat service. (Mostly used when the new Text Chat Service is being buggy.)
     if method == "SendSystemMessage" then 
         local message = {...}
