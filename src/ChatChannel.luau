@@ -20,7 +20,12 @@ local function findTextChannel(textChannelName: string): TextChannel?
     
     -- Select first text channel which matches the name
     for _, textChannel: TextChannel in descendants do
-        if textChannel.Name:gsub("RBX", ""):lower() == textChannelName:lower() and textChannel:IsA("TextChannel") then
+        if textChannel:IsA("TextChannel") == false then
+            continue
+        end
+        
+        local lowered = textChannel.Name:gsub("RBX", ""):lower()
+        if lowered == textChannelName:gsub("RBX", ""):lower() then
             return textChannel
         end
     end
