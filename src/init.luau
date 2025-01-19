@@ -326,20 +326,16 @@ if RunService:IsClient() then
         -- Load in settings
         LoadSettings()
 
-        -- Replicate messages from other channels that player is in to General
+        -- Customize incoming messages
         TextChatService.OnIncomingMessage = function(message: TextChatMessage)
+            local speaker: Types.ChatSpeaker?
+            local tags = {}
             local properties = Instance.new("TextChatMessageProperties")
+
+            -- Replicates incoming chats from other channels to General
             if message.TextSource and message.TextChannel.Name:match("RBXGeneral") == nil and message.Status == Enum.TextChatMessageStatus.Success and Players:GetPlayerByUserId(message.TextSource.UserId) ~= Players.LocalPlayer then
                 ChatConnector:SendSystemMessage(message.Text, ChatConnector:GetChannel("All"), `ChatConnector.Replicator.{message.TextChannel.Name}.{Players:GetPlayerByUserId(message.TextSource.UserId).Name}`)
             end
-            return properties
-        end
-
-        -- Customize incoming messages
-        TextChatService.OnChatWindowAdded = function(message: TextChatMessage)	
-            local properties = TextChatService.ChatWindowConfiguration:DeriveNewMessageProperties()
-            local speaker: Types.ChatSpeaker?
-            local tags = {}
 
             --// Skip if meta contains roblox message
             if message.Metadata:match("Roblox.") then
