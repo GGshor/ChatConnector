@@ -1,4 +1,3 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local TextChatService = game:GetService("TextChatService")
@@ -7,8 +6,8 @@ local ChatConnector = require(ReplicatedStorage:WaitForChild("ChatConnector"))
 local TestPart = Workspace:WaitForChild("SpawnLocation")
 
 task.delay(2, function()
-    local TestChannel = ChatConnector:AddChannel("TestChannel", false)
     local TestSpeaker = ChatConnector:AddSpeaker("Testing")
+    ChatConnector:AddChannel("TestChannel", false)
 
     TestSpeaker:JoinChannel("All")
 

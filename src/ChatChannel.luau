@@ -39,8 +39,10 @@ end
 
     @param userid number -- The userid of player
 ]=]
-function ChatChannel:AddUserAsync(userid: number)
-    self._textChannel:AddUserAsync(userid)
+function ChatChannel.AddUserAsync(self: Types.ChatChannel, userid: number)
+    if self.TextChannel then
+        self.TextChannel:AddUserAsync(userid)
+    end
 end
 
 --[=[
@@ -52,22 +54,23 @@ end
     @return Types.ChatChannel
 ]=]
 function ChatChannel.new(channelName: string, autoJoin: boolean?): Types.ChatChannel
-    local self = {
+    local self = setmetatable({
         Name = channelName,
         Speakers = {},
         AutoJoin = true,
         Joinable = false, -- DEPRECATED // Prevents old scripts from erroring
         Private = false, -- DEPRECATED // Prevents old scripts from erroring
+        TextChannel = nil,
         __newindex = function(currentSelf: Types.ChatChannel, key, value)
             if table.find(ChangeableProperties, key) then
-                if key == "AutoJoin" and (typeof(value) == "boolean" or typeof(value) == "nil")  then
+                if key == "AutoJoin" and (typeof(value) == "boolean" or typeof(value) == "nil") and currentSelf.TextChannel then
                     currentSelf.AutoJoin = value and true or false
-                    currentSelf._textChannel:SetAttribute("AutoJoin", currentSelf.AutoJoin)
+                    currentSelf.TextChannel:SetAttribute("AutoJoin", currentSelf.AutoJoin)
 
-                    -- Add players to channel if autojoin is enabled
+                    -- Add players to channel if automatic join is enabled
                     if currentSelf.AutoJoin then
                         for _, player: Player in Players:GetPlayers() do
-                            currentSelf._textChannel:AddUserAsync(player.UserId)
+                            currentSelf.TextChannel:AddUserAsync(player.UserId)
                         end
                     end
                 end
@@ -75,41 +78,41 @@ function ChatChannel.new(channelName: string, autoJoin: boolean?): Types.ChatCha
                 error(`{key} is not a property of ChatChannel!`)
             end
         end
-    } :: Types.ChatChannel
+    }, ChatChannel)
 
-    self._textChannel = findTextChannel(channelName)
+    self.TextChannel = findTextChannel(channelName)
 
     -- Create a new channel if it doesn't exist already
-    if not self._textChannel then
-        self._textChannel = Instance.new("TextChannel")
-        self._textChannel.Name = channelName
-        self._textChannel.Parent = TextChatService:WaitForChild("TextChannels")
+    if not self.TextChannel then
+        self.TextChannel = Instance.new("TextChannel")
+        self.TextChannel.Name = channelName
+        self.TextChannel.Parent = TextChatService:WaitForChild("TextChannels")
     end
 
     -- Set auto join
     self.AutoJoin = autoJoin and true or false
-    self._textChannel:SetAttribute("AutoJoin", self.AutoJoin)
+    self.TextChannel:SetAttribute("AutoJoin", self.AutoJoin)
 
     -- Add speakers when added to the channel
-    self._textChannel.ChildAdded:Connect(function(child: TextSource?)
+    self.TextChannel.ChildAdded:Connect(function(child: TextSource)
         if child:IsA("TextSource") then
             self.Speakers[child.Name] = child
         end
     end)
 
-    -- Add players to channel if autojoin is enabled
+    -- Add players to channel if automatic join is enabled
     if self.AutoJoin then
         Players.PlayerAdded:Connect(function(player)
             if self.AutoJoin then
-                self._textChannel:AddUserAsync(player.UserId)
+                self.TextChannel:AddUserAsync(player.UserId)
             end
         end)
         for _, player: Player in Players:GetPlayers() do
-            self._textChannel:AddUserAsync(player.UserId)
+            self.TextChannel:AddUserAsync(player.UserId)
         end
     end
 
-    return setmetatable(self, ChatChannel)
+    return self
 end
 
 return ChatChannel

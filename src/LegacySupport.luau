@@ -1,9 +1,14 @@
+--[[
+    Handles methods that should go to legacy chat
+
+    No check is enabled here due to type error for the old chat service module
+]]
+--!nocheck
+
 local ServerScriptService = game:GetService("ServerScriptService")
 local TextChatService = game:GetService("TextChatService")
 local StarterGui = game:GetService("StarterGui")
 local RunService = game:GetService("RunService")
-
-local ChatColorConverter = require(script.Parent:WaitForChild("ChatColorConverter"))
 
 local ChatService = nil
 local ChatServerModule = nil
@@ -17,19 +22,19 @@ if TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService then
     end
 end
 
-return function (method: string, ...: any...): any
-    if not ChatService then
+return function (method: string, ...: any): any
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
         return false -- Return false as we're running the new TextChatService
     end
 
     -- Internal API call to know we're using the old version without calling any methods
     if method == "_InternalLegacyCheck" then
-        return true
+        return TextChatService.ChatVersion == Enum.ChatVersion.LegacyChatService
     end
 
     -- Internal API call to return the connection to the ChannelAdded event
     if method == "_InternalChannelAddedEvent" then
-        return ChatServerModule.ChannelAdded
+        return require(ChatServerModule).ChannelAdded
     end
 
     -- Just here for easy switching between legacy and text chat service. (Mostly used when the new Text Chat Service is being buggy.)
@@ -45,5 +50,6 @@ return function (method: string, ...: any...): any
         return ChatService:Chat(...)
     end
 
+    -- If unknown, then we're using legacy version
     return ChatServerModule[method](ChatServerModule, ...)
 end

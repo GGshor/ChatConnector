@@ -6,7 +6,7 @@ local Types = require(script.Parent:WaitForChild("Types"))
 local ChatSpeaker = {}
 ChatSpeaker.__index = ChatSpeaker
 
-function ChatSpeaker:SetExtraData(dataName: string, dataValue: any)
+function ChatSpeaker.SetExtraData(self: Types.ChatSpeaker, dataName: string, dataValue: any)
     self.ExtraData[dataName] = dataValue
 end
 

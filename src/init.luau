@@ -5,7 +5,6 @@
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local ServerScriptService = game:GetService("ServerScriptService")
 local TextChatService = game:GetService("TextChatService")
 
 local Types = require(script:WaitForChild("Types"))
@@ -18,7 +17,6 @@ local ChatColorConverter = require(script:WaitForChild("ChatColorConverter"))
 local ChatConnector = {
     ChatChannels = {},
     Speakers = {},
-    _channelAddedBind = RunService:IsServer() and LegacySupport("_InternalLegacyCheck") == true and Instance.new("BindableEvent")
 } :: Types.ChatConnectorAPI
 
 local ClientEvent = script:WaitForChild("ClientEvent")
@@ -74,6 +72,8 @@ function ChatConnector:Chat(partOrCharacter: Instance , message: string, color: 
     else
         ClientEvent:FireAllClients("Chat", partOrCharacter, message, color)
     end
+
+    return
 end
 
 --[=[
@@ -84,7 +84,7 @@ end
 
     @return nil
 ]=]
-function ChatConnector:SendSystemMessage(message: string, textChannel: Types.ChatChannel, metadata: string?)
+function ChatConnector:SendSystemMessage(message: string, textChannel: Types.ChatChannel, metadata: string?): ()
     if RunService:IsClient() then
         local legacyResponse = LegacySupport("SendSystemMessage", message)
 
@@ -93,10 +93,14 @@ function ChatConnector:SendSystemMessage(message: string, textChannel: Types.Cha
             return legacyResponse
         end
 
-        textChannel._textChannel:DisplaySystemMessage(message, metadata)
+        if textChannel.TextChannel then
+            textChannel.TextChannel:DisplaySystemMessage(message, metadata)
+        end
     else
         ClientEvent:FireAllClients("SendSystemMessage", message, textChannel, metadata)
     end
+
+    return
 end
 
 --[=[
@@ -113,11 +117,6 @@ function ChatConnector:AddChannel(channelName: string, autoJoin: boolean?): Type
     -- If we're running legacy, return legacy response
     if legacyResponse ~= false then
         return legacyResponse
-    end
-
-    -- Prevent Clients from running this method
-    if RunService:IsClient() then
-        return
     end
 
     -- All is the old name
@@ -184,6 +183,8 @@ function ChatConnector:GetChannel(channelName: string, limitedRequest: boolean?)
             end
         end
     end
+
+    return nil
 end
 
 --[=[
@@ -203,7 +204,7 @@ function ChatConnector:AddSpeaker(speakerName: string): Types.ChatSpeaker
 
     -- Prevent Clients from running this method
     if RunService:IsClient() then
-        return
+        return ClientRequest:InvokeServer("GetSpeaker", speakerName)
     end
 
     -- Check if channel is already registered
@@ -241,7 +242,7 @@ end
 --[=[
     Gets a speaker
 ]=]
-function ChatConnector:GetSpeaker(speakerName: string): Types.ChatSpeaker
+function ChatConnector:GetSpeaker(speakerName: string): Types.ChatSpeaker?
     local legacyResponse = LegacySupport("GetSpeaker", speakerName)
 
     -- If we're running legacy, return legacy response
@@ -263,6 +264,8 @@ function ChatConnector:GetSpeaker(speakerName: string): Types.ChatSpeaker
             return self:AddSpeaker(players.Name)
         end
     end
+
+    return nil
 end
 
 
@@ -271,13 +274,25 @@ if RunService:IsServer() then
     -- Only run setup if we're using the new version
     if LegacySupport("_InternalLegacyCheck") == false then
         -- Connect client requests
-        ClientRequest.OnServerInvoke = function(_, method: string, ...: any...)
+        ClientRequest.OnServerInvoke = function(_, method: string, ...: any)
             if method == "GetSpeaker" then
                 return ChatConnector:GetSpeaker(...)
             elseif method == "GetChannel" then
                 return ChatConnector:GetChannel(..., true)
             end
+
+            return nil
         end
+
+        -- Add event
+        ChatConnector._channelAddedBind = Instance.new("BindableEvent")
+
+        --[[
+            Connects the event for when Server adds a new channel.
+
+            @param channelName string -- The channel name
+        ]]
+        ChatConnector.ChannelAdded = ChatConnector._channelAddedBind.Event
 
         -- Add system speaker
         ChatConnector:AddSpeaker("System"):SetExtraData({
@@ -285,7 +300,7 @@ if RunService:IsServer() then
             ["ChatColor"] = Color3.new(1, 0, 0)
         })
 
-        local function OnChannelAdded(channel: TextChannel?)
+        local function OnChannelAdded(channel: TextChannel)
             if channel:IsA("TextChannel") == false then
                 return
             end
@@ -316,19 +331,12 @@ if RunService:IsClient() then
             task.spawn(ChatConnector[methodName], ChatConnector, ...)
         end)
 
-        --[[
-            Connects the event for when Server adds a new channel.
-
-            @param channelName string -- The channel name
-        ]]
-        ChatConnector.ChannelAdded = ChatConnector._channelAddedBind.Event
-
         -- Load in settings
         LoadSettings()
 
         -- Customize incoming messages
         TextChatService.OnIncomingMessage = function(message: TextChatMessage)
-            local speaker: Types.ChatSpeaker?
+            local speaker: Types.ChatSpeaker
             local tags = {}
             local properties = Instance.new("TextChatMessageProperties")
 
@@ -346,7 +354,7 @@ if RunService:IsClient() then
                 local channel = message.Metadata:split(".")[3]
                 speaker = ChatConnector:GetSpeaker(message.Metadata:split(".")[4])
 
-                if channel:match("RBXTeam") then
+                if channel:match("RBXTeam") and speaker.Player ~= nil then
                     table.insert(tags, {
                         TagColor = speaker.Player.TeamColor.Color,
                         TagText = speaker.Player.Team.Name
@@ -371,7 +379,7 @@ if RunService:IsClient() then
             if message.TextSource == nil and message.Metadata:match("ChatConnector.ChatSpeaker") == nil then	
                 if message.TextChannel.Name:match("RBXWhisper:") then
                     local whisper = TextChatService:WaitForChild("TextChatCommands"):WaitForChild("RBXWhisperCommand") :: TextChatCommand
-                    local split = message.TextChannel.Name:gsub("RBXWhisper:"):split("_")
+                    local split = message.TextChannel.Name:gsub("RBXWhisper:", ""):split("_")
                     local player1, player2 = Players:GetPlayerByUserId(split[1]), Players:GetPlayerByUserId(split[2])
 
                     local target = player1 ~= Players.LocalPlayer and player1 or player2

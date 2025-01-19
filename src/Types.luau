@@ -20,8 +20,9 @@ export type ChatChannel = {
     AutoJoin: boolean,
     Joinable: boolean, -- Deprecated, but maybe used in Future?
     Private: boolean, -- Deprecated, but good feature for ChatChannelService?
+    TextChannel: TextChannel?,
 
-    AddUserAsync: (userid: number) -> (),
+    AddUserAsync: (self: ChatChannel, userid: number) -> (),
 }
 
 export type ChatConnectorAPI = {
@@ -36,7 +37,7 @@ export type ChatConnectorAPI = {
     AddChannel: (self: ChatConnectorAPI, channelName: string, autoJoin: boolean?) -> ChatChannel,
     GetChannel: (self: ChatConnectorAPI, channelName: string) -> ChatChannel?,
     AddSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker,
-    GetSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker
+    GetSpeaker: (self: ChatConnectorAPI, speakerName: string) -> ChatSpeaker?
 }
 
 export type ChatSettings = {

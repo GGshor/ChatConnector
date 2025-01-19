@@ -1,3 +1,10 @@
+--[[
+	Adds support for changing settings and redirects to the correct setting
+
+	No check is enabled here due to the old settings module.
+]]
+--!nocheck
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -11,7 +18,7 @@ end
 
 local Settings = {}
 
----[[ Chat Behaviour Settings ]]
+---[[ Chat Behavior Settings ]]
 Settings.WindowDraggable = false -- DEPRECATED
 Settings.WindowResizable = false -- DEPRECATED
 Settings.ShowChannelsBar = false -- ChannelTabsConfiguration.Enabled
@@ -55,7 +62,7 @@ Settings.ErrorMessageTextColor = Color3.fromRGB(245, 50, 50) -- DEPRECATED
 Settings.MinimumWindowSize = UDim2.new(0.3, 0, 0.25, 0) -- DEPRECATED
 Settings.MaximumWindowSize = UDim2.new(1, 0, 1, 0) -- DEPRECATED
 Settings.DefaultWindowPosition = UDim2.new(0, 0, 0, 0) -- DEPRECATED
-local extraOffset = (7 * 2) + (5 * 2) -- Extra chatbar vertical offset
+local extraOffset = (7 * 2) + (5 * 2) -- Extra chat bar vertical offset
 Settings.DefaultWindowSizePhone = UDim2.new(0.5, 0, 0.5, extraOffset) -- DEPRECATED
 Settings.DefaultWindowSizeTablet = UDim2.new(0.4, 0, 0.3, extraOffset) -- DEPRECATED
 Settings.DefaultWindowSizeDesktop = UDim2.new(0.3, 0, 0.25, extraOffset)-- DEPRECATED
