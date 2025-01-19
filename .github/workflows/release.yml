@@ -23,8 +23,8 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Install aftman
-              uses: ok-nick/setup-aftman@v0.4.2
+            - name: Install rokit
+              uses: CompeyDev/setup-rokit@v0.1.2
 
             - name: Selene check
               run: |
