@@ -3,7 +3,8 @@
 A module that connects the legacy Roblox chat system to the new `TextChatService`.
 
 ## Setup
-Place this module in `ReplicatedStorage` and **require it at least once on the client** to enable chat functionality across all players.
+You can get the module through downloading it through the GitHub [release](https://github.com/GGshor/ChatConnector/releases/latest/download/ChatConnector.rbxm) or by using the [Marketplace](https://create.roblox.com/store/asset/108798205227072/ChatConnector) on Roblox.
+Place this module in `ReplicatedStorage` and **require it at least once on the client and server** to enable chat functionality across all players.
 
 ## Functions
 
